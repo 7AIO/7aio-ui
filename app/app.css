@@ -138,3 +138,32 @@ body {
 @utility link-active {
   @apply font-bold border-b-2 border-b-sidebar-accent-foreground;
 }
+
+/* Perlu animasi yang lebih smooth */
+/* @layer base {
+  [data-state="open"] > nav {
+    animation: navSlideIn 0.4s ease-out;
+  }
+  
+  [data-state="closed"] > nav {
+    animation: navSlideOut 0.4s ease-in;
+  }
+}
+
+@keyframes navSlideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes navSlideOut {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+} */
