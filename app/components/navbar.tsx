@@ -19,7 +19,7 @@ import {
 } from "./ui/sheet";
 import { useAuth } from "~/auth/AuthProvider";
 
-export function Navbar({ currentPage = "home", ...props }) {
+export function Navbar() {
   const { user, login, logout } = useAuth();
   const location = useLocation();
   const [isNavOpen, setIsNavOpen] = useState<boolean>(false);
@@ -89,7 +89,7 @@ export function Navbar({ currentPage = "home", ...props }) {
                 </div>
 
                 <div className="border-t p-6">
-                  {props.authenticated ? (
+                  {user ? (
                     <div className="flex items-center space-x-4">
                       <Avatar>
                         <AvatarImage src={user?.picture || "https://github.com/shadcn.png"} />
@@ -104,8 +104,6 @@ export function Navbar({ currentPage = "home", ...props }) {
                     </div>
                   ) : (
                     <Button className="w-full" variant="default" onClick={login}>
-                      {/* <Link to={"/login"}>
-                      </Link> */}
                       Login
                     </Button>
                   )}
@@ -132,15 +130,13 @@ export function Navbar({ currentPage = "home", ...props }) {
                 ))}
               </NavigationMenuList>
             </NavigationMenu>
-            {props.authenticated ? (
+            {user ? (
               <Avatar className="ml-8">
                 <AvatarImage src={user?.picture || "https://github.com/shadcn.png"} />
                 <AvatarFallback>CN</AvatarFallback>
               </Avatar>
             ) : (
               <Button className="border-primary" variant="default" onClick={login}>
-                {/* <Link to={"/login"}>
-                </Link> */}
                 Login
               </Button>
             )}

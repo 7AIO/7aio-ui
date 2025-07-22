@@ -4,14 +4,10 @@ import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
 import { Bot, LogIn, Send } from "lucide-react";
 import { useState, useRef, useEffect, type KeyboardEvent } from "react";
-import { useChat } from "~/hooks/useChat";
+import { useChat, type ChatMessage } from "~/hooks/useChat";
 import { Link } from "react-router";
 import type { IUser } from "~/hooks/useAuth";
-import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
-interface ChatMessage {
-  role: "assistant" | "human";
-  message: string;
-}
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 
 const ChatLog = ({
   role,
@@ -88,7 +84,6 @@ export function ChatBox({ user }: { user: IUser }) {
     }
   };
 
-  // Auto scroll to bottom on new messages
   useEffect(() => {
     if (scrollAreaViewportRef.current) {
       scrollAreaViewportRef.current.scrollTop =
@@ -99,17 +94,19 @@ export function ChatBox({ user }: { user: IUser }) {
   return (
     <Card className="bg-card/50 w-full border-2 border-violet-500/30">
       <CardContent className="p-4">
-        <ScrollArea
-          className="h-[250px] px-2 mb-4"
-          ref={scrollAreaViewportRef}
-        >
+        <ScrollArea className="h-[250px] px-2 mb-4" ref={scrollAreaViewportRef}>
           <div
             className="flex flex-col space-y-4"
             role="log"
             aria-live="polite"
           >
             {messages.map((msg, idx) => (
-              <ChatLog key={idx} role={msg.role} message={msg.message} />
+              <ChatLog
+                key={idx}
+                role={msg.role}
+                message={msg.message}
+                picture={msg.role === "human" ? user?.picture : undefined}
+              />
             ))}
           </div>
         </ScrollArea>
