@@ -24,7 +24,7 @@ export function Navbar({ currentPage = "home", ...props }) {
   ];
 
   return (
-    <header className="w-full p-6 border-b border-secondary-foreground bg-accent">
+    <header className="w-full px-4 py-3 border-b border-secondary-foreground bg-transparent">
       <div className="flex items-center justify-between">
         <Link to="/" className="">
           <div className="h-12 text-center flex items-center mr-8">
@@ -33,7 +33,6 @@ export function Navbar({ currentPage = "home", ...props }) {
             </span>
           </div>
         </Link>
-        {/* Mobile Navigation */}
         <div className="flex md:hidden">
           <Sheet>
             <SheetTrigger asChild>
@@ -51,7 +50,6 @@ export function Navbar({ currentPage = "home", ...props }) {
             <SheetContent side="right" className="w-[75%] p-0" closeButton={true}>
               <nav className="flex flex-col h-full bg-background">
                 <SheetHeader className="flex justify-between items-center p-6 border-b">
-                  {/* Logo section */}
                   <SheetTitle className="" asChild>
                     <span className="text-2xl font-bold gradient-text font-[Orbitron]">
                       7AIO
@@ -59,7 +57,6 @@ export function Navbar({ currentPage = "home", ...props }) {
                   </SheetTitle>
                 </SheetHeader>
 
-                {/* Menu items */}
                 <div className="flex-1 py-6">
                   <ul className="space-y-1">
                     {menus.map((item, idx) => (
@@ -68,8 +65,8 @@ export function Navbar({ currentPage = "home", ...props }) {
                           to={item.path}
                           className={`flex items-center px-6 py-3 transition-colors ${
                             location.pathname === item.path
-                              ? "bg-accent text-primary font-medium"
-                              : "text-foreground/60 hover:bg-accent hover:text-primary"
+                              ? "bg-accent text-white font-medium"
+                              : "text-foreground/60 hover:bg-accent/50 hover:text-white"
                           }`}
                           onClick={() => setIsNavOpen(false)}
                         >
@@ -80,7 +77,6 @@ export function Navbar({ currentPage = "home", ...props }) {
                   </ul>
                 </div>
 
-                {/* Profile/Login section */}
                 <div className="border-t p-6">
                   {props.authenticated ? (
                     <div className="flex items-center space-x-4">
@@ -106,7 +102,6 @@ export function Navbar({ currentPage = "home", ...props }) {
           </Sheet>
         </div>
         <nav className="hidden md:flex md:grow">
-          {/* Desktop Navigation */}
           <div className="flex justify-between space-x-8 w-full">
             <NavigationMenu className="">
               <NavigationMenuList className="transition-all duration-500">

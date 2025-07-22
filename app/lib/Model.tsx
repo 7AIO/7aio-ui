@@ -60,7 +60,7 @@ export function Model({
   position,
   ...props
 }: ModelProps) {
-  const group = React.useRef<THREE.Group>()
+  const group = React.useRef<THREE.Group | null>(null)
   const { scene, animations } = useGLTF('/model-transformed.glb')
   const clone = React.useMemo(() => SkeletonUtils.clone(scene), [scene])
   const { nodes, materials } = useGraph(clone) as GLTFResult

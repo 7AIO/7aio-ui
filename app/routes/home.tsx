@@ -12,7 +12,7 @@ export function meta({}: Route.MetaArgs) {
 export default function Home() {
   return (
     <Layout>
-      <HomeIndex />;
+      <HomeIndex />
     </Layout>
   );
 }

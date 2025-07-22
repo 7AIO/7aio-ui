@@ -12,7 +12,7 @@ export function meta({}: Route.MetaArgs) {
 export default function Login() {
   return (
       <Layout>
-        <Welcome />;
+        <Welcome />
       </Layout>
     );
 }

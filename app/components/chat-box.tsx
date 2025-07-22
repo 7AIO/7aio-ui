@@ -23,9 +23,9 @@ export const ChatLog = ({
     return (
       <div className="flex w-full justify-start">
         <div className="max-w-[80%] flex items-start">
-          <div className="relative bg-cyan-300 rounded-2xl rounded-tl-none px-4 py-2">
+          <div className="relative bg-secondary/70 rounded-2xl rounded-tl-none px-4 py-2">
             <div
-              className="absolute left-0 top-0 w-2 h-2 bg-cyan-300 -translate-x-full"
+              className="absolute left-0 top-0 w-2 h-2 bg-secondary/70 -translate-x-full"
               style={{
                 clipPath: "polygon(0 0, 100% 0, 100% 100%)",
               }}
@@ -42,9 +42,9 @@ export const ChatLog = ({
     return (
       <div className="flex w-full justify-end">
         <div className="max-w-[80%] flex items-end">
-          <div className="relative bg-blue-300 rounded-2xl rounded-tr-none px-4 py-2">
+          <div className="relative bg-primary/70 rounded-2xl rounded-br-none px-4 py-2">
             <div
-              className="absolute right-0 top-0 w-2 h-2 bg-blue-300 translate-x-full"
+              className="absolute right-0 top-0 w-2 h-2 bg-primary/70 translate-x-full"
               style={{
                 clipPath: "polygon(0 0, 0 100%, 100% 0)",
               }}
@@ -102,7 +102,7 @@ export function ChatBox() {
   }, [messages]);
 
   return (
-    <Card className="w-full border-2">
+    <Card className="bg-card/50 w-full border-2">
       <CardContent className="p-4">
         <ScrollArea className="h-[200px] min:h-[250px] px-2 mb-4">
           <div className="flex flex-col space-y-4" ref={scrollRef}>
@@ -126,8 +126,9 @@ export function ChatBox() {
           />
           <Button 
             onClick={handleSendMessage}
-            size="icon" 
-            className="h-[50px] w-[50px] rounded-lg"
+            size="sm"
+            variant="default" 
+            className="size-12 rounded-lg"
             disabled={!newMessage.trim()}
           >
             <Send className="h-5 w-5" />
@@ -135,5 +136,5 @@ export function ChatBox() {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
