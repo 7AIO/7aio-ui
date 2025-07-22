@@ -1,12 +1,14 @@
 import { useState } from "react";
+import { useAuth } from "~/auth/AuthProvider";
 import { Navbar } from "~/components/navbar";
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  // const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user } = useAuth();
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-  };
+  // const handleLogout = () => {
+  //   setIsLoggedIn(false);
+  // };
   return (
     <div className="min-h-screen bg-slate-950">
       {/* Cosmic background overlay */}
@@ -25,7 +27,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       }}></div>
       
       <div className="relative z-10">
-        <Navbar authenticated={isLoggedIn} />
+        <Navbar authenticated={!!user} />
         {children}
       </div>
     </div>
