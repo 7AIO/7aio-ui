@@ -27,7 +27,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       }}></div>
       
       <div className="relative z-10">
-        <Navbar authenticated={!!user} />
+        <Navbar />
         {children}
       </div>
     </div>

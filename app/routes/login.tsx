@@ -55,8 +55,8 @@ function LoginForm() {
                   onClick={login}
                 >
                   {/* <NavLink to={API_URL + "api/login/google"}>
-                    Login with Google
                   </NavLink> */}
+                  Login with Google
                 </Button>
               </div>
             </div>

@@ -1,30 +1,177 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { v4 as uuidv4 } from "uuid";
+// import { threadId } from "worker_threads";
+import api from "~/lib/api";
 
 export interface ChatMessage {
   role: "assistant" | "human";
   message: string;
 }
 
+interface apiThread {
+  threadId: string;
+}
+
+interface apiHistoryMessage {
+  actor: "ai" | "human";
+  message: string;
+  date: string;
+}
+
 export const useChat = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: "assistant",
-      message: "Hi! I'm your AI learning assistant. How can I help you today? 👋",
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [threadIds, setThreadIds] = useState<string[]>([]);
+  const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
-  const sendMessage = useCallback((message: string) => {
-    if (!message.trim()) return;
-
-    // Add user message
-    setMessages((prev) => [...prev, { role: "human", message }]);
-
-    // Simulate AI response
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { role: "assistant", message: "Thanks for your message! I'm a demo response. 🤖" }]);
-    }, 1000);
+  const createNewChat = useCallback(() => {
+    const newId = uuidv4();
+    setThreadIds((prev) => [newId, ...prev]);
+    setCurrentThreadId(newId);
   }, []);
 
-  return { messages, sendMessage };
-};
+  const getInitialMessage = () => [
+    {
+      role: "assistant" as const,
+      message:
+        "Hi! I'm your AI learning assistant. How can I help you today? 👋",
+    },
+  ];
 
+  const fetchThreadIds = useCallback(async () => {
+    setLoadingHistory(true);
+    try {
+      const response = await api.get("/api/ai/chat-histories/thread-ids");
+      const threads: apiThread[] = response.data.data;
+      const ids = threads.map((t) => t.threadId);
+      setThreadIds(ids);
+
+      if (ids.length > 0) {
+        if (!currentThreadId) {
+          setCurrentThreadId(ids[0]);
+        }
+      } else {
+        const newId = uuidv4();
+        setThreadIds([newId]);
+        setCurrentThreadId(newId);
+      }
+    } catch (error) {
+      console.error("Error fetching thread IDs:", error);
+      const newId = uuidv4();
+      setThreadIds([newId]);
+      setCurrentThreadId(newId);
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, [currentThreadId]);
+
+  useEffect(() => {
+    if (!currentThreadId) return;
+
+    const fetchHistory = async () => {
+      setLoading(true);
+      try {
+        const response = await api.get(
+          `/api/ai/chat-histories/${currentThreadId}`
+        );
+        const history: apiHistoryMessage[] = response.data.data;
+        const formattedMessage: ChatMessage[] = history.map((h) => ({
+          role: h.actor === "ai" ? "assistant" : "human",
+          message: h.message,
+        }));
+        setMessages(
+          formattedMessage.length > 0 ? formattedMessage : getInitialMessage()
+        );
+      } catch (error) {
+        console.warn(
+          `No history for thread ${currentThreadId}. Creating new thread`
+        );
+        setMessages(getInitialMessage());
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHistory();
+  }, [currentThreadId]);
+
+  const sendMessage = useCallback(
+    async (message: string) => {
+      if (!message.trim()) return;
+
+      // Add user message
+      const userMessage: ChatMessage = {
+        role: "human",
+        message,
+      };
+      setMessages((prev) => [...prev, userMessage]);
+      setLoading(true);
+
+      if (currentThreadId && !threadIds.includes(currentThreadId)) {
+        setThreadIds((prev) => [currentThreadId, ...prev]);
+      }
+
+      try {
+        const response = await fetch(`/api/ai/response/streaming`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message,
+            threadId: currentThreadId,
+          }),
+        });
+
+        if (!response.ok || !response.body) {
+          throw new Error(`Server error: ${response.statusText}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let assistantMessage = "";
+
+        setMessages((prev) => [...prev, { role: "assistant", message: "" }]);
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          assistantMessage += decoder.decode(value, { stream: true });
+
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            newMessages[newMessages.length - 1] = {
+              role: "assistant",
+              message: assistantMessage,
+            };
+            return newMessages;
+          });
+        }
+      } catch (error) {
+        console.error("Streaming failed:", error);
+        const errorMessage: ChatMessage = {
+          role: "assistant",
+          message: "Sorry, I couldn't get a response. Please try again.",
+        };
+        setMessages((prev) => [...prev.slice(0, -1), errorMessage]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [currentThreadId, threadIds]
+  );
+
+  return {
+    messages,
+    threadIds,
+    currentThreadId,
+    loading,
+    loadingHistory,
+    sendMessage,
+    setCurrentThreadId,
+    fetchThreadIds,
+    createNewChat,
+  };
+};

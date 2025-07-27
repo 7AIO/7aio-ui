@@ -44,7 +44,7 @@ const ChatLog = ({
     return (
       <div className="flex w-full justify-end">
         <div className="max-w-[80%] flex items-end">
-          <div className="relative bg-primary/70 rounded-2xl rounded-br-none px-4 py-2 text-white">
+          <div className="relative bg-primary/70 rounded-2xl rounded-tr-none px-4 py-2 text-white">
             <div
               className="absolute right-0 top-0 w-2 h-2 bg-primary/70 translate-x-full"
               style={{
@@ -65,7 +65,7 @@ const ChatLog = ({
 };
 
 export function ChatBox({ user }: { user: IUser }) {
-  const { messages, sendMessage } = useChat();
+  const { messages, sendMessage, fetchThreadIds } = useChat();
   const [newMessage, setNewMessage] = useState("");
   const scrollAreaViewportRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -83,6 +83,10 @@ export function ChatBox({ user }: { user: IUser }) {
       handleSendMessage();
     }
   };
+
+  useEffect(() => {
+    fetchThreadIds();
+  }, []);
 
   useEffect(() => {
     if (scrollAreaViewportRef.current) {
