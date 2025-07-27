@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect } from "react";
+import type { Readable } from "stream";
 import { v4 as uuidv4 } from "uuid";
 // import { threadId } from "worker_threads";
-import api from "~/lib/api";
+import api, { API_URL } from "~/lib/api";
 
 export interface ChatMessage {
   role: "assistant" | "human";
@@ -113,41 +114,82 @@ export const useChat = () => {
       }
 
       try {
-        const response = await fetch(`/api/ai/response/streaming`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message,
-            threadId: currentThreadId,
-          }),
-        });
-
-        if (!response.ok || !response.body) {
-          throw new Error(`Server error: ${response.statusText}`);
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
         let assistantMessage = "";
 
-        setMessages((prev) => [...prev, { role: "assistant", message: "" }]);
+        try {
+          const response = await api.post(
+            "/api/ai/response/streaming",
+            {
+              message,
+              threadId: currentThreadId,
+            },
+            {
+              responseType: "stream",
+              adapter: "fetch",
+            }
+          );
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+          const stream = response.data;
+          const reader = stream
+            .pipeThrough(new TextDecoderStream())
+            .getReader();
 
-          assistantMessage += decoder.decode(value, { stream: true });
+          setMessages((prev) => [...prev, { role: "assistant", message: "" }]);
 
-          setMessages((prev) => {
-            const newMessages = [...prev];
-            newMessages[newMessages.length - 1] = {
-              role: "assistant",
-              message: assistantMessage,
-            };
-            return newMessages;
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            console.log("Received:", value);
+            assistantMessage += value;
+            setMessages((prev) => {
+              const newMessages = [...prev];
+              newMessages[newMessages.length - 1] = {
+                role: "assistant",
+                message: assistantMessage,
+              };
+              return newMessages;
+            });
+          }
+        } catch (error) {
+          console.error("Trying again with fallback stream for compability mode ");
+          const response = await fetch(`${API_URL}/api/ai/response/streaming`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({
+              message,
+              threadId: currentThreadId,
+            }),
           });
+
+          if (!response.ok || !response.body) {
+            throw new Error(
+              `Failed to stream data: ${
+                error instanceof Error ? error.message : error
+              }`
+            );
+          }
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          setMessages((prev) => [...prev, { role: "assistant", message: "" }]);
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            assistantMessage += decoder.decode(value, { stream: true });
+
+            setMessages((prev) => {
+              const newMessages = [...prev];
+              newMessages[newMessages.length - 1] = {
+                role: "assistant",
+                message: assistantMessage,
+              };
+              return newMessages;
+            });
+          }
         }
       } catch (error) {
         console.error("Streaming failed:", error);
