@@ -3,7 +3,6 @@ import type { Readable } from "stream";
 import { v4 as uuidv4 } from "uuid";
 // import { threadId } from "worker_threads";
 import api, { API_URL } from "~/lib/api";
-import { ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID } from '~/lib/voice';
 
 export interface ChatMessage {
   role: "assistant" | "human";
@@ -99,39 +98,26 @@ export const useChat = () => {
     fetchHistory();
   }, [currentThreadId]);
 
-  const playElevenLabsAudio = async (text: string) => {
+  const playVoiceAudio = async (text: string) => {
     setIsPlayingAudio(true);
     try {
-      const response = await fetch(
-        `https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "xi-api-key": ELEVENLABS_API_KEY,
-          },
-          body: JSON.stringify({
-            text,
-            model_id: "eleven_multilingual_v2",
-            voice_settings: {
-              stability: 0.5,
-              similarity_boost: 0.5,
-            },
-          }),
-        }
+      const response = await api.post(
+        "/api/ai/tts",
+        { text },
+        { responseType: "blob" }
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to generate audio from ElevenLabs");
+      if (response.status !== 200) {
+        throw new Error("Failed to generate voice audio");
       }
 
-      const audioBlob = await response.blob();
+      const audioBlob = response.data;
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
       audio.play();
       audio.onended = () => setIsPlayingAudio(false);
     } catch (error) {
-      console.error("Error playing ElevenLabs audio:", error);
+      console.error("Error playing voice audio:", error);
       setIsPlayingAudio(false);
     }
   };
@@ -234,7 +220,7 @@ export const useChat = () => {
         }
         // Once the AI response is complete, generate and play the audio
         if (assistantMessage) {
-          await playElevenLabsAudio(assistantMessage);
+          await playVoiceAudio(assistantMessage);
         }
       } catch (error) {
         console.error("Streaming failed:", error);
