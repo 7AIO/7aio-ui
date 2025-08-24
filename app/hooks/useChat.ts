@@ -25,6 +25,7 @@ export const useChat = () => {
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
   const createNewChat = useCallback(() => {
     const newId = uuidv4();
@@ -97,6 +98,30 @@ export const useChat = () => {
     fetchHistory();
   }, [currentThreadId]);
 
+  const playVoiceAudio = async (text: string) => {
+    setIsPlayingAudio(true);
+    try {
+      const response = await api.post(
+        "/api/ai/tts",
+        { text },
+        { responseType: "blob" }
+      );
+
+      if (response.status !== 200) {
+        throw new Error("Failed to generate voice audio");
+      }
+
+      const audioBlob = response.data;
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      audio.play();
+      audio.onended = () => setIsPlayingAudio(false);
+    } catch (error) {
+      console.error("Error playing voice audio:", error);
+      setIsPlayingAudio(false);
+    }
+  };
+
   const sendMessage = useCallback(
     async (message: string) => {
       if (!message.trim()) return;
@@ -151,7 +176,9 @@ export const useChat = () => {
             });
           }
         } catch (error) {
-          console.error("Trying again with fallback stream for compability mode ");
+          console.error(
+            "Trying again with fallback stream for compability mode "
+          );
           const response = await fetch(`${API_URL}/api/ai/response/streaming`, {
             method: "POST",
             headers: {
@@ -191,6 +218,10 @@ export const useChat = () => {
             });
           }
         }
+        // Once the AI response is complete, generate and play the audio
+        if (assistantMessage) {
+          await playVoiceAudio(assistantMessage);
+        }
       } catch (error) {
         console.error("Streaming failed:", error);
         const errorMessage: ChatMessage = {
@@ -215,5 +246,6 @@ export const useChat = () => {
     setCurrentThreadId,
     fetchThreadIds,
     createNewChat,
+    isPlayingAudio,
   };
 };
